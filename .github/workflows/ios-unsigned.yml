@@ -1,0 +1,52 @@
+name: iOS Unsigned IPA
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'ios/**'
+      - '.github/workflows/ios-unsigned.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Show Xcode version
+        run: xcodebuild -version
+
+      - name: Build unsigned iOS app
+        run: |
+          xcodebuild \
+            -project ios/BitChordIOS.xcodeproj \
+            -scheme BitChordIOS \
+            -configuration Release \
+            -sdk iphoneos \
+            -derivedDataPath "$RUNNER_TEMP/BitChordDerivedData" \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY="" \
+            build
+
+      - name: Package unsigned IPA
+        run: |
+          APP_PATH="$RUNNER_TEMP/BitChordDerivedData/Build/Products/Release-iphoneos/BitChordIOS.app"
+          test -d "$APP_PATH"
+          mkdir -p ios/build/Payload
+          ditto "$APP_PATH" ios/build/Payload/BitChordIOS.app
+          ditto -c -k --sequesterRsrc --keepParent ios/build/Payload ios/build/BitChord-iOS-unsigned.ipa
+          unzip -l ios/build/BitChord-iOS-unsigned.ipa
+
+      - name: Upload unsigned IPA
+        uses: actions/upload-artifact@v4
+        with:
+          name: BitChord-iOS-unsigned
+          path: ios/build/BitChord-iOS-unsigned.ipa
+          if-no-files-found: error
+          retention-days: 7
