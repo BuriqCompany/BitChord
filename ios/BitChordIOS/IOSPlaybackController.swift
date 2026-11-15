@@ -37,11 +37,13 @@ final class IOSPlaybackController: ObservableObject {
             forInterval: CMTime(seconds: 0.25, preferredTimescale: 600),
             queue: .main
         ) { [weak self] time in
-            guard let self, time.isNumeric else { return }
-            self.currentTime = time.seconds
-            let itemDuration = self.player.currentItem?.duration.seconds ?? 0
-            self.duration = itemDuration.isFinite ? max(itemDuration, 0) : 0
-            self.skipSponsorSegmentIfNeeded(at: time.seconds)
+            DispatchQueue.main.async { [weak self] in
+                guard let self, time.isNumeric else { return }
+                self.currentTime = time.seconds
+                let itemDuration = self.player.currentItem?.duration.seconds ?? 0
+                self.duration = itemDuration.isFinite ? max(itemDuration, 0) : 0
+                self.skipSponsorSegmentIfNeeded(at: time.seconds)
+            }
         }
     }
 
@@ -72,18 +74,19 @@ final class IOSPlaybackController: ObservableObject {
         player.pause()
         player.replaceCurrentItem(with: nil)
 
+        let sponsorBlockClient = sponsorBlock
         sponsorTask = Task { [weak self] in
             do {
-                let fetchedSegments = try await sponsorBlock.segments(for: track.id)
+                let fetchedSegments = try await sponsorBlockClient.segments(for: track.id)
                 guard let self, self.currentRequest == requestID, !Task.isCancelled else { return }
-                segments = fetchedSegments
-                sponsorBlockStatus = fetchedSegments.isEmpty
+                self.segments = fetchedSegments
+                self.sponsorBlockStatus = fetchedSegments.isEmpty
                     ? "SponsorBlock aktif · tidak ada segmen"
                     : "SponsorBlock aktif · \(fetchedSegments.count) segmen"
             } catch is CancellationError {
             } catch {
                 guard let self, self.currentRequest == requestID, !Task.isCancelled else { return }
-                sponsorBlockStatus = "SponsorBlock tidak tersedia: \(error.localizedDescription)"
+                self.sponsorBlockStatus = "SponsorBlock tidak tersedia: \(error.localizedDescription)"
             }
         }
 
@@ -96,18 +99,18 @@ final class IOSPlaybackController: ObservableObject {
             Task { @MainActor [weak self] in
                 guard let self, self.currentRequest == requestID else { return }
                 if let errorMessage {
-                    isResolving = false
-                    isBuffering = false
-                    playbackError = errorMessage
+                    self.isResolving = false
+                    self.isBuffering = false
+                    self.playbackError = errorMessage
                     return
                 }
                 guard let stream else {
-                    isResolving = false
-                    isBuffering = false
-                    playbackError = "YouTube did not return a playable audio stream."
+                    self.isResolving = false
+                    self.isBuffering = false
+                    self.playbackError = "YouTube did not return a playable audio stream."
                     return
                 }
-                startPlayback(stream)
+                self.startPlayback(stream)
             }
         }
     }
@@ -160,11 +163,12 @@ final class IOSPlaybackController: ObservableObject {
         let item = AVPlayerItem(asset: asset)
         itemObservation = item.observe(\.status, options: [.new]) { [weak self] item, _ in
             guard item.status == .failed else { return }
-            DispatchQueue.main.async {
+            let message = item.error?.localizedDescription ?? "The audio stream could not be played."
+            DispatchQueue.main.async { [weak self] in
                 guard let self else { return }
-                isResolving = false
-                isBuffering = false
-                playbackError = item.error?.localizedDescription ?? "The audio stream could not be played."
+                self.isResolving = false
+                self.isBuffering = false
+                self.playbackError = message
             }
         }
         player.replaceCurrentItem(with: item)
