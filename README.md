@@ -98,6 +98,12 @@ Grab the latest signed APK from the [Releases](https://github.com/kushagrasinghx
 
 ---
 
+## iOS UI prototype
+
+This fork also includes an independent SwiftUI interface prototype for **iOS 15+**. Open [`ios/BitChordIOS.xcodeproj`](ios/BitChordIOS.xcodeproj) in Xcode to run it. The iOS app currently demonstrates the redesigned Home, Search, Library, and now-playing screens using sample data; it does not yet include audio playback or connect to BitChord services. See [`ios/README.md`](ios/README.md) for details.
+
+---
+
 <div align="center">
 
 <h1><a id="contributing"></a>Contributing</h1>
