@@ -93,20 +93,22 @@ final class IOSPlaybackController: ObservableObject {
             region: locale.regionCode ?? "US",
             language: locale.languageCode ?? "en"
         ) { [weak self] stream, errorMessage in
-            guard let self, self.currentRequest == requestID else { return }
-            if let errorMessage {
-                isResolving = false
-                isBuffering = false
-                playbackError = errorMessage
-                return
+            Task { @MainActor [weak self] in
+                guard let self, self.currentRequest == requestID else { return }
+                if let errorMessage {
+                    isResolving = false
+                    isBuffering = false
+                    playbackError = errorMessage
+                    return
+                }
+                guard let stream else {
+                    isResolving = false
+                    isBuffering = false
+                    playbackError = "YouTube did not return a playable audio stream."
+                    return
+                }
+                startPlayback(stream)
             }
-            guard let stream else {
-                isResolving = false
-                isBuffering = false
-                playbackError = "YouTube did not return a playable audio stream."
-                return
-            }
-            startPlayback(stream)
         }
     }
 
@@ -153,7 +155,7 @@ final class IOSPlaybackController: ObservableObject {
 
         let asset = AVURLAsset(
             url: url,
-            options: [AVURLAssetHTTPHeaderFieldsKey: stream.headers]
+            options: ["AVURLAssetHTTPHeaderFieldsKey": stream.headers]
         )
         let item = AVPlayerItem(asset: asset)
         itemObservation = item.observe(\.status, options: [.new]) { [weak self] item, _ in
