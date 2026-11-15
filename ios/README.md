@@ -1,15 +1,19 @@
-# BitChord iOS UI
+# BitChord iOS
 
-This folder contains a native SwiftUI app for iOS 15 and later. It is an original iOS implementation in the BitChord fork; the Android application and its existing features remain unchanged.
+This folder contains a native SwiftUI app for iOS 15 and later. It keeps the existing BitChord-inspired player UI and uses a Kotlin Multiplatform framework for YouTube stream resolution.
 
 ## Open in Xcode
 
-Open `BitChordIOS.xcodeproj` and run the `BitChordIOS` scheme on an iOS 15+ simulator or device.
+Open `BitChordIOS.xcodeproj` and run the `BitChordIOS` scheme on an iOS 15+ simulator or device. The shared iOS framework must first be built for the selected target; the GitHub Actions workflow builds the device and simulator frameworks before Xcode.
 
 ## YouTube Music
 
-Home and Search fetch real song results from YouTube Music's WEB_REMIX/InnerTube search endpoint without requiring sign-in. Selecting a result opens its official YouTube Music watch page for playback; audio is not extracted or played inside the app. YouTube Music's unofficial endpoint can change without notice.
+Home and Search fetch real song results from YouTube Music's WEB_REMIX/InnerTube endpoint without requiring sign-in. Selecting a result resolves an AAC stream through the GPL-licensed InnerTubeX library and plays it with `AVPlayer` inside BitChord. The AVAudioSession is configured for background playback.
 
-The native player uses the selected song's artwork with a visible iOS 15 `UIVisualEffectView` blur backdrop and rectangular controls inspired by BitChord. It does not import local audio or use sample songs.
+SponsorBlock looks up skip segments through its privacy endpoint using a four-character SHA-256 video-ID prefix; it does not send the full video ID to SponsorBlock. Sponsor, self-promotion, and interaction segments are skipped during playback. SponsorBlock is an independent service, and its segment data may be unavailable or out of date.
+
+The player uses the selected song's artwork with a visible iOS 15 `UIVisualEffectView` blur backdrop and rectangular controls inspired by BitChord. InnerTube and SponsorBlock are unofficial integrations and may change independently. No Google account cookies are collected by this iOS implementation.
+
+SponsorBlock data is provided by the SponsorBlock community under CC BY-NC-SA 4.0; attribution is shown in the player. See the [SponsorBlock API and database license](https://github.com/ajayyy/SponsorBlock/wiki/Database-and-API-License) and [API documentation](https://wiki.sponsor.ajay.app/w/API_Docs).
 
 This repository is a fork of [kushagrasinghx/BitChord](https://github.com/kushagrasinghx/BitChord). The upstream Android project is licensed under GPL-3.0; this fork retains that license. The separate [BitChord iOS beta page](https://bitchord.hero154.com/) is used as product context, not as a source-code dependency.

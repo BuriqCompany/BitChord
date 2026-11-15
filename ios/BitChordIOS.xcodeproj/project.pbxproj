@@ -11,6 +11,8 @@
 		A10000000000000000000002 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000002 /* ContentView.swift */; };
 		A10000000000000000000003 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000004 /* Assets.xcassets */; };
 		A10000000000000000000004 /* YtMusicClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000005 /* YtMusicClient.swift */; };
+		A10000000000000000000005 /* IOSPlaybackController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000006 /* IOSPlaybackController.swift */; };
+		A10000000000000000000006 /* SponsorBlockClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000007 /* SponsorBlockClient.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -19,6 +21,8 @@
 		A20000000000000000000003 /* BitChordIOS.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = BitChordIOS.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		A20000000000000000000004 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		A20000000000000000000005 /* YtMusicClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = YtMusicClient.swift; sourceTree = "<group>"; };
+		A20000000000000000000006 /* IOSPlaybackController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IOSPlaybackController.swift; sourceTree = "<group>"; };
+		A20000000000000000000007 /* SponsorBlockClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SponsorBlockClient.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -47,6 +51,8 @@
 				A20000000000000000000001 /* BitChordApp.swift */,
 				A20000000000000000000002 /* ContentView.swift */,
 				A20000000000000000000005 /* YtMusicClient.swift */,
+				A20000000000000000000006 /* IOSPlaybackController.swift */,
+				A20000000000000000000007 /* SponsorBlockClient.swift */,
 			);
 			path = BitChordIOS;
 			sourceTree = "<group>";
@@ -119,6 +125,8 @@
 				A10000000000000000000001 /* BitChordApp.swift in Sources */,
 				A10000000000000000000002 /* ContentView.swift in Sources */,
 				A10000000000000000000004 /* YtMusicClient.swift in Sources */,
+				A10000000000000000000005 /* IOSPlaybackController.swift in Sources */,
+				A10000000000000000000006 /* SponsorBlockClient.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -160,16 +168,29 @@
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				GENERATE_INFOPLIST_FILE = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = BitChordIOS/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = BitChord;
 				INFOPLIST_KEY_UIUserInterfaceStyle = Dark;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/../shared/build/bin/$(KOTLIN_TARGET)/releaseFramework",
+				);
 				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				KOTLIN_TARGET = iosArm64;
+				"KOTLIN_TARGET[sdk=iphonesimulator*][arch=arm64]" = iosSimulatorArm64;
+				"KOTLIN_TARGET[sdk=iphoneos*]" = iosArm64;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
+				OTHER_LDFLAGS = (
+					"$(inherited)",
+					"-framework",
+					BitChordShared,
+				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.buriqcompany.bitchordios;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
@@ -184,16 +205,29 @@
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				GENERATE_INFOPLIST_FILE = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = BitChordIOS/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = BitChord;
 				INFOPLIST_KEY_UIUserInterfaceStyle = Dark;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/../shared/build/bin/$(KOTLIN_TARGET)/releaseFramework",
+				);
 				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				KOTLIN_TARGET = iosArm64;
+				"KOTLIN_TARGET[sdk=iphonesimulator*][arch=arm64]" = iosSimulatorArm64;
+				"KOTLIN_TARGET[sdk=iphoneos*]" = iosArm64;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
+				OTHER_LDFLAGS = (
+					"$(inherited)",
+					"-framework",
+					BitChordShared,
+				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.buriqcompany.bitchordios;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";

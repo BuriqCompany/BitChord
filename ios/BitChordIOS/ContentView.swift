@@ -33,6 +33,7 @@ private final class YtMusicViewModel: ObservableObject {
     @Published var showAlert = false
 
     private let client = YtMusicClient()
+    let playback = IOSPlaybackController()
     private var homeTask: Task<Void, Never>?
     private var searchTask: Task<Void, Never>?
     private var activeSearchQuery = ""
@@ -128,11 +129,15 @@ struct ContentView: View {
             .frame(maxWidth: .infinity, maxHeight: .infinity)
 
             if let track = selectedTrack {
-                MiniPlayer(track: track) {
-                    isShowingPlayer = true
-                } onOpenInYouTubeMusic: {
-                    openInYouTubeMusic(track)
-                }
+                MiniPlayer(
+                    track: track,
+                    isPlaying: model.playback.isPlaying,
+                    isResolving: model.playback.isResolving,
+                    onOpen: {
+                        isShowingPlayer = true
+                    },
+                    onTogglePlayback: model.playback.togglePlayback
+                )
             }
 
             BottomTabBar(selection: $selectedTab)
@@ -141,10 +146,8 @@ struct ContentView: View {
         .preferredColorScheme(.dark)
         .fullScreenCover(isPresented: $isShowingPlayer) {
             if let track = selectedTrack {
-                NowPlayingView(track: track) {
+                NowPlayingView(track: track, playback: model.playback) {
                     isShowingPlayer = false
-                } onOpenInYouTubeMusic: {
-                    openInYouTubeMusic(track)
                 }
             }
         }
@@ -161,11 +164,8 @@ struct ContentView: View {
     private func selectTrack(_ track: YtMusicTrack) {
         selectedTrack = track
         model.remember(track)
+        model.playback.play(track)
         isShowingPlayer = true
-    }
-
-    private func openInYouTubeMusic(_ track: YtMusicTrack) {
-        UIApplication.shared.open(track.watchURL)
     }
 }
 
@@ -371,8 +371,8 @@ private struct LibraryView: View {
 
 private struct NowPlayingView: View {
     let track: YtMusicTrack
+    @ObservedObject var playback: IOSPlaybackController
     let onClose: () -> Void
-    let onOpenInYouTubeMusic: () -> Void
 
     var body: some View {
         GeometryReader { geometry in
@@ -397,8 +397,10 @@ private struct NowPlayingView: View {
                                     .foregroundColor(BitChordStyle.muted)
                             }
                             Spacer()
-                            PlayerChromeButton(symbol: "ellipsis", action: onOpenInYouTubeMusic)
-                                .accessibilityLabel("Buka di YouTube Music")
+                            Image(systemName: "speaker.wave.2")
+                                .font(.system(size: 17, weight: .medium))
+                                .foregroundColor(BitChordStyle.muted)
+                                .frame(width: 42, height: 42)
                         }
 
                         ArtworkView(track: track, size: artworkSize)
@@ -430,36 +432,59 @@ private struct NowPlayingView: View {
                                     .clipShape(RoundedRectangle(cornerRadius: 9, style: .continuous))
                             }
 
-                            Button(action: onOpenInYouTubeMusic) {
-                                HStack(spacing: 12) {
-                                    Image(systemName: "play.fill")
-                                        .font(.system(size: 17, weight: .semibold))
-                                        .foregroundColor(BitChordStyle.background)
-                                        .frame(width: 54, height: 54)
-                                        .background(Color.white)
-                                        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-                                    VStack(alignment: .leading, spacing: 4) {
-                                        Text("Putar di YouTube Music")
-                                            .font(.subheadline.weight(.semibold))
-                                            .foregroundColor(.white)
-                                        Text("Buka pemutar resmi untuk lagu ini")
-                                            .font(.caption)
-                                            .foregroundColor(BitChordStyle.muted)
-                                    }
+                            VStack(spacing: 3) {
+                                Slider(
+                                    value: Binding(
+                                        get: { playback.progress },
+                                        set: playback.seek(to:)
+                                    ),
+                                    in: 0...1
+                                )
+                                .accentColor(BitChordStyle.accent)
+                                .disabled(playback.duration <= 0 || playback.isResolving)
+                                HStack {
+                                    Text(timeString(playback.currentTime))
                                     Spacer()
-                                    Image(systemName: "arrow.up.right")
-                                        .font(.caption.weight(.semibold))
-                                        .foregroundColor(BitChordStyle.muted)
+                                    Text(playback.duration > 0 ? timeString(playback.duration) : "--:--")
                                 }
-                                .padding(12)
-                                .background(BlurView(style: .systemThinMaterialDark))
-                                .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
-                                .overlay {
-                                    RoundedRectangle(cornerRadius: 14, style: .continuous)
-                                        .stroke(Color.white.opacity(0.12), lineWidth: 1)
-                                }
+                                .font(.caption2.monospacedDigit())
+                                .foregroundColor(BitChordStyle.muted)
                             }
-                            .buttonStyle(PlainButtonStyle())
+
+                            HStack {
+                                Spacer()
+                                Button(action: playback.togglePlayback) {
+                                    Group {
+                                        if playback.isResolving {
+                                            ProgressView()
+                                                .progressViewStyle(CircularProgressViewStyle(tint: BitChordStyle.background))
+                                        } else {
+                                            Image(systemName: playback.isPlaying ? "pause.fill" : "play.fill")
+                                                .font(.system(size: 21, weight: .semibold))
+                                        }
+                                    }
+                                    .foregroundColor(BitChordStyle.background)
+                                    .frame(width: 62, height: 62)
+                                    .background(Color.white)
+                                    .clipShape(RoundedRectangle(cornerRadius: 13, style: .continuous))
+                                }
+                                .disabled(playback.isResolving)
+                                .accessibilityLabel(playback.isPlaying ? "Jeda" : "Putar")
+                                Spacer()
+                            }
+
+                            Text(playback.playbackError ?? playback.sponsorBlockStatus)
+                                .font(.caption)
+                                .foregroundColor(playback.playbackError == nil ? BitChordStyle.muted : .red.opacity(0.9))
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .lineLimit(2)
+
+                            Link(
+                                "(Using SponsorBlock)",
+                                destination: URL(string: "https://sponsor.ajay.app/")!
+                            )
+                            .font(.caption2)
+                            .foregroundColor(BitChordStyle.muted)
                         }
                         .padding(16)
                         .background(BlurView(style: .systemUltraThinMaterialDark))
@@ -478,12 +503,20 @@ private struct NowPlayingView: View {
         }
         .preferredColorScheme(.dark)
     }
+
+    private func timeString(_ seconds: Double) -> String {
+        guard seconds.isFinite, seconds >= 0 else { return "0:00" }
+        let totalSeconds = Int(seconds)
+        return "\(totalSeconds / 60):\(String(format: "%02d", totalSeconds % 60))"
+    }
 }
 
 private struct MiniPlayer: View {
     let track: YtMusicTrack
+    let isPlaying: Bool
+    let isResolving: Bool
     let onOpen: () -> Void
-    let onOpenInYouTubeMusic: () -> Void
+    let onTogglePlayback: () -> Void
 
     var body: some View {
         HStack(spacing: 11) {
@@ -507,15 +540,23 @@ private struct MiniPlayer: View {
             .buttonStyle(PlainButtonStyle())
             .accessibilityLabel("Buka pemutar")
 
-            Button(action: onOpenInYouTubeMusic) {
-                Image(systemName: "play.fill")
-                    .font(.system(size: 16, weight: .semibold))
-                    .foregroundColor(.white)
-                    .frame(width: 42, height: 46)
-                    .background(Color.white.opacity(0.08))
-                    .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+            Button(action: onTogglePlayback) {
+                Group {
+                    if isResolving {
+                        ProgressView()
+                            .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                    } else {
+                        Image(systemName: isPlaying ? "pause.fill" : "play.fill")
+                            .font(.system(size: 16, weight: .semibold))
+                    }
+                }
+                .foregroundColor(.white)
+                .frame(width: 42, height: 46)
+                .background(Color.white.opacity(0.08))
+                .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
             }
-            .accessibilityLabel("Putar di YouTube Music")
+            .disabled(isResolving)
+            .accessibilityLabel(isPlaying ? "Jeda" : "Putar")
         }
         .padding(.horizontal, 11)
         .padding(.vertical, 8)

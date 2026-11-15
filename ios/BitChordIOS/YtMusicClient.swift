@@ -5,10 +5,6 @@ struct YtMusicTrack: Identifiable, Equatable {
     let title: String
     let artist: String
     let artworkURL: URL?
-
-    var watchURL: URL {
-        URL(string: "https://music.youtube.com/watch?v=\(id)")!
-    }
 }
 
 enum YtMusicClientError: LocalizedError {

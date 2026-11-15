@@ -5,6 +5,11 @@ on:
     branches: [main]
     paths:
       - 'ios/**'
+      - 'shared/**'
+      - 'gradle/**'
+      - 'build.gradle.kts'
+      - 'settings.gradle.kts'
+      - 'gradle.properties'
       - '.github/workflows/ios-unsigned.yml'
   workflow_dispatch:
 
@@ -20,6 +25,18 @@ jobs:
 
       - name: Show Xcode version
         run: xcodebuild -version
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Build shared iOS frameworks
+        run: |
+          ./gradlew \
+            :shared:linkReleaseFrameworkIosArm64 \
+            :shared:linkReleaseFrameworkIosSimulatorArm64
 
       - name: Build unsigned iOS app
         run: |

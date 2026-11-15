@@ -98,9 +98,9 @@ Grab the latest signed APK from the [Releases](https://github.com/kushagrasinghx
 
 ---
 
-## iOS UI prototype
+## iOS app
 
-This fork also includes an independent SwiftUI app for **iOS 15+**. It supports importing and playing local audio files from the iPhone's Files app, alongside Home, Search, Library, and a blurred artwork player. Streaming and BitChord service integrations are not connected. Open [`ios/BitChordIOS.xcodeproj`](ios/BitChordIOS.xcodeproj) in Xcode; see [`ios/README.md`](ios/README.md) for details.
+This fork includes a SwiftUI app for **iOS 15+** with YouTube Music search, in-app audio playback, and SponsorBlock segment skipping. It uses a Kotlin Multiplatform iOS framework for the existing InnerTubeX stream resolver. See [`ios/README.md`](ios/README.md) for build and playback details.
 
 ---
 
