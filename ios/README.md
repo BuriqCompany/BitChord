@@ -4,7 +4,7 @@ This folder contains a native SwiftUI app for iOS 15 and later. It keeps the exi
 
 ## Open in Xcode
 
-Open `BitChordIOS.xcodeproj` and run the `BitChordIOS` scheme on an iOS 15+ simulator or device. The shared iOS framework must first be built for the selected target; the GitHub Actions workflow builds the device and simulator frameworks before Xcode.
+Open `BitChordIOS.xcodeproj` and run the `BitChordIOS` scheme on an iOS 15+ simulator or device. Before opening Xcode, build the playback framework with `./gradlew -p ios/streamresolver linkReleaseFrameworkIosArm64 linkReleaseFrameworkIosSimulatorArm64`; GitHub Actions runs the same build before Xcode.
 
 ## YouTube Music
 
